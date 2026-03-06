@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ThinkLess Planner - Smart Productivity Scheduler</title>
+    <meta name="description" content="A productivity planner that helps you stop overthinking and start doing." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+    <!-- ===== FOCUS MODE OVERLAY ===== -->
+    <div id="focusOverlay" class="focus-overlay hidden">
+        <div class="focus-card">
+            <button class="focus-close" onclick="closeFocusMode()">✕</button>
+            <div class="focus-badge" id="focusBadge">High Priority</div>
+            <h2 id="focusTaskName">Task Name</h2>
+            <div class="focus-meta">
+                <span id="focusDeadline">📅 Deadline: —</span>
+                <span id="focusImportance">⚡ Importance: —</span>
+            </div>
+            <a id="focusLink" href="#" target="_blank" class="focus-link hidden">🔗 Open Task Link</a>
+
+            <div class="pomodoro-section">
+                <div class="pomodoro-ring">
+                    <svg viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="52" class="ring-bg" />
+                        <circle cx="60" cy="60" r="52" class="ring-progress" id="pomodoroRing" />
+                    </svg>
+                    <div class="pomodoro-time" id="pomodoroDisplay">25:00</div>
+                </div>
+                <div class="pomodoro-controls">
+                    <button class="btn-pomo" id="pomodoroStartBtn" onclick="togglePomodoro()">▶ Start</button>
+                    <button class="btn-pomo btn-pomo-reset" onclick="resetPomodoro()">↺ Reset</button>
+                </div>
+                <p class="pomodoro-label">Pomodoro Focus Timer</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="header-logo">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 8v4l3 3"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1>ThinkLess Planner</h1>
+                    <p>A productivity planner that helps you stop overthinking and start doing.</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="theme-switcher">
+                    <button class="theme-btn theme-blue" onclick="setTheme('blue')" title="Calm Blue"></button>
+                    <button class="theme-btn theme-orange" onclick="setTheme('orange')"
+                        title="Energetic Orange"></button>
+                    <button class="theme-btn theme-purple" onclick="setTheme('purple')" title="Relaxed Purple"></button>
+                </div>
+                <div class="header-stats">
+                    <div class="hstat" id="hstatPlanned">
+                        <span class="hstat-num" id="hTotalTasks">0</span>
+                        <span class="hstat-lbl">Planned</span>
+                    </div>
+                    <div class="hstat" id="hstatCompleted">
+                        <span class="hstat-num" id="hCompletedTasks">0</span>
+                        <span class="hstat-lbl">Completed</span>
+                    </div>
+                    <div class="hstat" id="hstatSkipped">
+                        <span class="hstat-num" id="hSkippedTasks">0</span>
+                        <span class="hstat-lbl">Skipped</span>
+                    </div>
+                    <div class="hstat">
+                        <span class="hstat-num" id="hLive">--:--</span>
+                        <span class="hstat-lbl">Live Time</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== START NOW BANNER ===== -->
+    <div id="startNowBanner" class="start-now-banner hidden">
+        <div class="snb-inner">
+            <div class="snb-icon">🚀</div>
+            <div class="snb-text">
+                <strong id="snbTitle">You have free time right now!</strong>
+                <span id="snbMessage">Suggested task: —</span>
+            </div>
+            <button class="btn-start-now" id="snbBtn" onclick="handleStartNow()">Start Now</button>
+            <button class="btn-snb-close" onclick="dismissStartNow()">✕</button>
+        </div>
+    </div>
+
+    <!-- ===== DEADLINE RISK WARNING ===== -->
+    <div id="riskWarning" class="risk-warning hidden">
+        ⚠ Deadline Risk: You may not have enough time to complete all tasks before their deadlines.
+    </div>
+
+    <main class="app-main">
+
+        <!-- ===== LEFT PANEL: TASK INPUT ===== -->
+        <aside class="panel panel-left">
+            <div class="panel-header">
+                <span class="panel-icon">📋</span>
+                <h2>Add Task</h2>
+            </div>
+            <form id="taskForm" onsubmit="addTask(event)">
+                <div class="form-group">
+                    <label for="taskName">Task Name</label>
+                    <input type="text" id="taskName" placeholder="e.g. Resume Update" required />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="taskImportance">Importance</label>
+                        <select id="taskImportance">
+                            <option value="High">🔴 High</option>
+                            <option value="Medium" selected>🟡 Medium</option>
+                            <option value="Low">🟢 Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskEnergy">Energy Required</label>
+                        <select id="taskEnergy">
+                            <option value="High">⚡ High</option>
+                            <option value="Medium" selected>🔋 Medium</option>
+                            <option value="Low">😴 Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="taskDeadline">Deadline</label>
+                        <input type="datetime-local" id="taskDeadline" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="taskTime">Est. Time (min)</label>
+                        <input type="number" id="taskTime" min="5" max="480" placeholder="30" required />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="taskLink">Task Link (URL)</label>
+                    <input type="url" id="taskLink" placeholder="https://..." />
+                </div>
+
+
+
+                <button type="submit" class="btn-primary" id="btnAddTask">
+                    <span>＋</span> Add Task
+                </button>
+            </form>
+
+            <!-- ===== RECURRING TASKS ===== -->
+            <div class="section-divider">
+                <span>Recurring Tasks</span>
+                <button type="button" class="rec-toggle" id="recTaskToggle"
+                    onclick="toggleSection('recTaskSection','recTaskToggle')">＋ Add</button>
+            </div>
+            <div id="recTaskSection" class="collapsible-rec hidden">
+                <form id="recurringTaskForm" onsubmit="addRecurringTask(event)">
+                    <input type="hidden" id="rtEditId" value="" />
+                    <div class="form-group">
+                        <label for="rtName">Task Name</label>
+                        <input type="text" id="rtName" placeholder="e.g. Study Session" required />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rtImportance">Importance</label>
+                            <select id="rtImportance">
+                                <option value="High">🔴 High</option>
+                                <option value="Medium" selected>🟡 Medium</option>
+                                <option value="Low">🟢 Low</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="rtEnergy">Energy Required</label>
+                            <select id="rtEnergy">
+                                <option value="High">⚡ High</option>
+                                <option value="Medium" selected>🔋 Medium</option>
+                                <option value="Low">😴 Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Days of Week</label>
+                        <div class="day-pills" id="rtDays">
+                            <label class="day-pill"><input type="checkbox" value="Mon" /> Mon</label>
+                            <label class="day-pill"><input type="checkbox" value="Tue" /> Tue</label>
+                            <label class="day-pill"><input type="checkbox" value="Wed" /> Wed</label>
+                            <label class="day-pill"><input type="checkbox" value="Thu" /> Thu</label>
+                            <label class="day-pill"><input type="checkbox" value="Fri" /> Fri</label>
+                            <label class="day-pill"><input type="checkbox" value="Sat" /> Sat</label>
+                            <label class="day-pill"><input type="checkbox" value="Sun" /> Sun</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rtStart">Start Time <span
+                                    style="color:var(--text3);font-weight:400">(optional)</span></label>
+                            <input type="time" id="rtStart" />
+                        </div>
+                        <div class="form-group">
+                            <label for="rtEnd">End Time <span
+                                    style="color:var(--text3);font-weight:400">(optional)</span></label>
+                            <input type="time" id="rtEnd" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rtEstTime">Est. Time (min)</label>
+                            <input type="number" id="rtEstTime" min="5" max="480" placeholder="60" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="rtLink">Task Link</label>
+                            <input type="url" id="rtLink" placeholder="https://..." />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="rtWeekly" checked />
+                            <span>Repeat every week</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-primary btn-sm" id="rtSubmitBtn">🔁 Add Recurring Task</button>
+                </form>
+            </div>
+            <div id="recurringTaskList" class="recurring-list"></div>
+
+            <!-- ===== TASK LIST ===== -->
+            <div class="section-divider">
+                <span>One-Time Tasks</span>
+            </div>
+            <div id="taskList" class="task-list"></div>
+        </aside>
+
+        <!-- ===== CENTER PANEL: SCHEDULE DASHBOARD ===== -->
+        <section class="panel panel-center">
+            <!-- Recommended Schedule -->
+            <div class="panel-header">
+                <span class="panel-icon">🎯</span>
+                <h2>Recommended Schedule</h2>
+                <button class="btn-secondary" onclick="scheduleTasks()">⟳ Refresh Schedule</button>
+            </div>
+            <div id="scheduleList" class="schedule-list">
+                <div class="empty-state">
+                    <div class="empty-icon">📆</div>
+                    <p>Add tasks and free time slots to get your smart schedule!</p>
+                </div>
+            </div>
+
+            <!-- Conflict Warnings -->
+            <div id="conflictPanel" class="conflict-panel hidden"></div>
+
+            <!-- Weekly Timetable -->
+            <div class="panel-header mt-lg">
+                <span class="panel-icon">📅</span>
+                <h2>Weekly Timetable</h2>
+                <div class="wt-legend">
+                    <span class="wt-legend-item"><span class="wt-legend-dot"
+                            style="background:#6c63ff"></span>Task</span>
+                    <span class="wt-legend-item"><span class="wt-legend-dot"
+                            style="background:#00c9a7"></span>Free</span>
+                    <span class="wt-legend-item"><span class="wt-legend-dot"
+                            style="background:#ff4d6d"></span>Conflict</span>
+                </div>
+            </div>
+            <div id="weeklyTimetable" class="weekly-timetable"></div>
+
+            <!-- Deadline Pressure Timeline -->
+            <div class="panel-header mt-lg">
+                <span class="panel-icon">⏱</span>
+                <h2>Deadline Pressure Timeline</h2>
+            </div>
+            <div id="timeline" class="timeline-container"></div>
+
+
+            <!-- Daily Productivity Insight -->
+            <div class="panel-header mt-lg">
+                <span class="panel-icon">📊</span>
+                <h2>Daily Productivity Insight</h2>
+            </div>
+            <div id="insightPanel" class="insight-panel"></div>
+
+            <!-- Daily Behavior Insights -->
+            <div class="panel-header mt-lg" id="behaviorPanelHeader">
+                <span class="panel-icon">🧠</span>
+                <h2>Daily Behavior Insights</h2>
+            </div>
+            <div id="behaviorPanel" class="insight-panel"></div>
+        </section>
+
+        <!-- ===== RIGHT PANEL: FREE TIME ===== -->
+        <aside class="panel panel-right">
+            <div class="panel-header">
+                <span class="panel-icon">🕐</span>
+                <h2>Add Free Time</h2>
+            </div>
+            <form id="freeTimeForm" onsubmit="addFreeTime(event)">
+                <div class="form-group">
+                    <label for="ftDate">Date</label>
+                    <input type="date" id="ftDate" required />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ftStart">Start Time</label>
+                        <input type="time" id="ftStart" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="ftEnd">End Time</label>
+                        <input type="time" id="ftEnd" required />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="ftEnergy">Energy Available</label>
+                    <select id="ftEnergy">
+                        <option value="High">⚡ High</option>
+                        <option value="Medium" selected>🔋 Medium</option>
+                        <option value="Low">😴 Low</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary btn-teal">
+                    <span>＋</span> Add Free Time
+                </button>
+            </form>
+
+            <!-- RECURRING FREE TIME -->
+            <div class="section-divider">
+                <span>Recurring Free Time</span>
+                <button type="button" class="rec-toggle" id="recSlotToggle"
+                    onclick="toggleSection('recSlotSection','recSlotToggle')">＋ Add</button>
+            </div>
+            <div id="recSlotSection" class="collapsible-rec hidden">
+                <form id="recurringSlotForm" onsubmit="addRecurringFreeTime(event)">
+                    <input type="hidden" id="rsEditId" value="" />
+                    <div class="form-group">
+                        <label>Days of Week</label>
+                        <div class="day-pills" id="rsDays">
+                            <label class="day-pill"><input type="checkbox" value="Mon" /> Mon</label>
+                            <label class="day-pill"><input type="checkbox" value="Tue" /> Tue</label>
+                            <label class="day-pill"><input type="checkbox" value="Wed" /> Wed</label>
+                            <label class="day-pill"><input type="checkbox" value="Thu" /> Thu</label>
+                            <label class="day-pill"><input type="checkbox" value="Fri" /> Fri</label>
+                            <label class="day-pill"><input type="checkbox" value="Sat" /> Sat</label>
+                            <label class="day-pill"><input type="checkbox" value="Sun" /> Sun</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rsStart">Start Time</label>
+                            <input type="time" id="rsStart" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="rsEnd">End Time</label>
+                            <input type="time" id="rsEnd" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="rsEnergy">Energy Available</label>
+                        <select id="rsEnergy">
+                            <option value="High">⚡ High</option>
+                            <option value="Medium" selected>🔋 Medium</option>
+                            <option value="Low">😴 Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="rsWeekly" checked />
+                            <span>Repeat every week</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-primary btn-teal btn-sm" id="rsSubmitBtn">🔁 Add Recurring
+                        Slot</button>
+                </form>
+            </div>
+            <div id="recurringSlotList" class="recurring-list"></div>
+
+            <!-- ONE-TIME FREE TIME LIST -->
+            <div class="section-divider">
+                <span>One-Time Slots</span>
+            </div>
+            <div id="freeTimeList" class="free-time-list"></div>
+
+            <!-- MOMENTUM TRACKER -->
+            <div class="panel-header mt-lg">
+                <span class="panel-icon">🔥</span>
+                <h2>Task Momentum</h2>
+            </div>
+            <div id="momentumList" class="momentum-list"></div>
+        </aside>
+
+    </main>
+
+    <!-- ===== ADVANCED REGRET SIMULATOR MODAL ===== -->
+    <div id="regretModal" class="modal hidden">
+        <div class="modal-content regret-simulator">
+            <h2 id="rsTaskName">Task Name</h2>
+
+            <div class="rs-score-wrapper">
+                <div class="rs-dial-container" id="rsDialContainer">
+                    <div class="rs-dial-content">
+                        <div class="rs-score-label">Regret Score</div>
+                        <div class="rs-score-value" id="rsScoreValue">0%</div>
+                    </div>
+                </div>
+                <div class="rs-score-desc" id="rsScoreDesc">Analyzing...</div>
+            </div>
+
+            <div class="rs-domino-effect" id="rsDominoEffect">
+                <!-- Rendered visualization of domino effect -->
+            </div>
+
+            <div class="rs-paths">
+                <!-- Path 1: Complete it -->
+                <div class="rs-path rs-path-green">
+                    <div class="rs-path-header">
+                        <span class="rs-icon">✔</span>
+                        <h3>If you start it now:</h3>
+                    </div>
+                    <ul class="rs-benefits" id="rsBenefitsList">
+                        <li>Tasks remain on schedule</li>
+                        <li>Lower stress later</li>
+                    </ul>
+                </div>
+
+                <!-- Path 2: Delay it -->
+                <div class="rs-path rs-path-red">
+                    <div class="rs-path-header">
+                        <span class="rs-icon">⚠</span>
+                        <h3>If you delay it:</h3>
+                    </div>
+                    <ul class="rs-costs" id="rsCostsList">
+                        <li>Work piles up for later</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="rs-actions" id="rsSmartActions"
+                style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <!-- Dynamically populated buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ADVANCED PROCRASTINATION TIMER OVERLAY ===== -->
+    <div id="procrastinationOverlay" class="timer-overlay hidden">
+        <div class="timer-box proc-timer-modern">
+            <h3 id="timerTaskName">Task Name</h3>
+
+            <div class="proc-ring-container">
+                <svg viewBox="0 0 120 120" class="proc-ring-svg">
+                    <circle cx="60" cy="60" r="52" class="ring-bg" />
+                    <circle cx="60" cy="60" r="52" class="ring-progress proc-ring" id="procRing" />
+                </svg>
+                <div id="timerDisplay" class="timer-display proc-time-display">00:00</div>
+            </div>
+
+            <p id="timerMessage" class="timer-message proc-msg-ani">Waiting...</p>
+
+            <div id="distractionLogArea" class="distraction-area">
+                <div class="distraction-score">Procrastination Score: <span id="procScoreDisplay">0</span>%</div>
+                <div class="distraction-btns" id="distractionBtns">
+                    <button type="button" onclick="logDistraction('Social Media')">📱 Social</button>
+                    <button type="button" onclick="logDistraction('Videos')">📺 Videos</button>
+                    <button type="button" onclick="logDistraction('Games')">🎮 Games</button>
+                </div>
+            </div>
+
+            <div class="timer-actions">
+                <button class="btn-primary" onclick="stopProcrastination(true)">🚀 Start Now</button>
+                <button class="btn-primary btn-focus-rescue" id="btnFocusRescue" onclick="startFocusRescue()">⏳ 2-Min
+                    Focus</button>
+                <button class="btn-secondary" onclick="stopProcrastination(false)">Delay</button>
+            </div>
+        </div>
+    </div>
+
+    <p>ThinkLess Planner &mdash; Built for students & professionals &copy; 2026</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
